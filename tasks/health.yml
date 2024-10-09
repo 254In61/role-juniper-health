@@ -2,7 +2,7 @@
 - name: "Run command => {{ command }}"
   junipernetworks.junos.junos_command:
     commands: "{{ command }}"
-    display: set
+    # display: set
   register: command_output
   ignore_errors: true
 
@@ -22,4 +22,4 @@
     dest: "{{ tmp_config_store }}"
   delegate_to: localhost
   ignore_errors: true
-  when: config_output["failed"] == false
+  when: command_output["failed"] == false
