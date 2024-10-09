@@ -27,7 +27,7 @@
 - name: Append the checks to a file
   ansible.builtin.shell: |
     echo '' >> {{ tmp_config_store }}
-    echo '==>{{ command }}'
+    echo '==>{{ command }}' >> {{ tmp_config_store }}
     echo '{{ formatted_config }}' >> {{ tmp_config_store }}
   delegate_to: localhost
   ignore_errors: true
