@@ -1,24 +1,28 @@
 ---
-- name: Playbook to configure AAP
-  hosts: localhost
+- name: Perform pre-upgrade-checks
+  hosts: to_patch 
   gather_facts: false
- 
+  connection: ansible.netcommon.netconf
+  
+  vars:
+    ansible_network_os: junos
+
   pre_tasks:
     - name: Include specific project variables
       ansible.builtin.include_vars:
         dir: group_vars
+      delegate_to: localhost
 
   tasks:
-    !
-    !
-    - name: Import role-aap-object-schedule
+    - name: Set file operations facts
+      ansible.builtin.set_fact:
+        output_file: "{{ root_dir }}/{{ pre_checks_file }}"
+      delegate_to: localhost
+
+    - name: Import role-junos-health-checks role
       ansible.builtin.include_role:
-        name: role-aap-object-schedule
+        name: role-junos-health-checks
       vars:
-        schedule: true
-        in_list: "{{ item }}"
-      loop:
-        - "{{ cisco_schedule }}"
-        - "{{ junos_schedule }}"
-    !
-    !
+        health: true
+        command: "{{ item }}"
+        loop: "{{ lookup('file', 'files/health-check-commands.txt').splitlines() }}"
