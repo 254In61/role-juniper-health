@@ -1,5 +1,5 @@
 ---
-- name: Collect command output
+- name: "Run command => {{ command }}"
   junipernetworks.junos.junos_command:
     commands: "{{ command }}"
     display: set
