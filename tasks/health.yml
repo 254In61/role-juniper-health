@@ -1,0 +1,25 @@
+---
+- name: Collect command output
+  junipernetworks.junos.junos_command:
+    commands: "{{ command }}"
+    display: set
+  register: command_output
+  ignore_errors: true
+
+# regex_replace('\r\n', '\n'): Ensures that the configuration is formatted properly with new lines,
+# in case the original output contains carriage return and line feed (\r\n).
+- name: Ensure the command output is properly formatted
+  ansible.builtin.set_fact:
+    formatted_config: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
+  delegate_to: localhost
+  ignore_errors: true
+  when: command_output["failed"] == false
+
+# Does is append or overwrite??
+- name: Save the configuration to the temporary config store
+  ansible.builtin.copy:
+    content: "{{ formatted_config }}"
+    dest: "{{ tmp_config_store }}"
+  delegate_to: localhost
+  ignore_errors: true
+  when: config_output["failed"] == false
