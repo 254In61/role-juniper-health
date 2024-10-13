@@ -1,15 +1,10 @@
 ---
-- name: Set facts
-  ansible.builtin.set_fact:
-    output_file: "{{ tmp_config_store }}"
-
 - name: "Run command => {{ command }}"
   junipernetworks.junos.junos_command:
     commands: "{{ command }}"
     # display: set
   register: command_output
   ignore_errors: true
-
 
 # regex_replace('\r\n', '\n'): Ensures that the configuration is formatted properly with new lines,
 # in case the original output contains carriage return and line feed (\r\n).
@@ -22,9 +17,9 @@
 
 - name: Append the checks to a file
   ansible.builtin.shell: |
-    echo '' >> {{ output_file }}
-    echo '==>{{ command }}' >> {{ output_file }}
-    echo '{{ formatted_config }}' >> {{ output_file }}
+    echo '' >> {{ health_checks_tmp_store }}
+    echo '==>{{ command }}' >> {{ health_checks_tmp_store }}
+    echo '{{ formatted_config }}' >> {{ health_checks_tmp_store }}
   delegate_to: localhost
   ignore_errors: true
   when: command_output["failed"] == false
