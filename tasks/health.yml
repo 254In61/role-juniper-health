@@ -5,8 +5,8 @@
     # display: set
   register: command_output
   ignore_errors: true
-  vars:
-    ansible_host: "{{ ansible_host }}"
+  # vars:
+  #   ansible_host: "{{ ansible_host }}"
 
 # regex_replace('\r\n', '\n'): Ensures that the configuration is formatted properly with new lines,
 # in case the original output contains carriage return and line feed (\r\n).
@@ -15,16 +15,16 @@
     formatted_config: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
   delegate_to: localhost
   ignore_errors: true
-  vars:
-    ansible_host: "{{ ansible_host }}"
+  # vars:
+  #   ansible_host: "{{ ansible_host }}"
   when: command_output["failed"] == false
 
 - name: "Remove existing {{ output_file }}"
   ansible.builtin.file:
     path: "{{ output_file }}"
     state: absent
-  vars:
-    ansible_host: "{{ ansible_host }}"
+  # vars:
+  #   ansible_host: "{{ ansible_host }}"
   delegate_to: localhost
 
 - name: Append the checks to a file
@@ -34,6 +34,6 @@
     echo '{{ formatted_config }}' >> {{ output_file }}
   delegate_to: localhost
   ignore_errors: true
-  vars:
-    ansible_host: "{{ ansible_host }}"
+  # vars:
+  #   ansible_host: "{{ ansible_host }}"
   when: command_output["failed"] == false
