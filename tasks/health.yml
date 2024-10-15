@@ -17,9 +17,9 @@
 
 - name: Append the checks to a file
   ansible.builtin.shell: |
-    echo '' >> {{ tmp_backup_file_path }}
-    echo '==>{{ command }}' >> {{ tmp_backup_file_path }}
-    echo '{{ formatted_config }}' >> {{ tmp_backup_file_path }}
+    echo '' >> {{ tmp_cmd_output_store }}
+    echo '==>{{ command }}' >> {{ tmp_cmd_output_store }}
+    echo '{{ formatted_config }}' >> {{ tmp_cmd_output_store }}
   delegate_to: localhost
   ignore_errors: true
   when: command_output["failed"] == false
