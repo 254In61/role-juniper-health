@@ -1,11 +1,4 @@
 ---
-- name: Set facts
-  ansible.builtin.set_fact:
-    tmp_cmd_output_store: "{{ local_root_dir }}/{{ file_name }}"
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
-
 - name: "Run command => {{ command }}"
   junipernetworks.junos.junos_command:
     commands: "{{ command }}"
