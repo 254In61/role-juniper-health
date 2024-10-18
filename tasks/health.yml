@@ -26,7 +26,7 @@
 
 - name: Set file name
   ansible.builtin.set_fact:
-    file_name: "{{ command }} | replace(' ', '_') }}.txt"
+    file_name: "{{ command | replace(' ', '_') }}".txt
   delegate_to: locahost
   ignore_errors: true
 
