@@ -8,18 +8,31 @@
 
 # regex_replace('\r\n', '\n'): Ensures that the configuration is formatted properly with new lines,
 # in case the original output contains carriage return and line feed (\r\n).
-- name: Ensure the command output is properly formatted
-  ansible.builtin.set_fact:
-    formatted_config: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
-  delegate_to: localhost
-  ignore_errors: true
-  when: command_output["failed"] == false
+# - name: Ensure the command output is properly formatted
+#   ansible.builtin.set_fact:
+#     formatted_config: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
+#   delegate_to: localhost
+#   ignore_errors: true
+#   when: command_output["failed"] == false
 
-- name: Append the checks to a file
-  ansible.builtin.shell: |
-    echo '' >> {{ tmp_cmd_output_store }}
-    echo '==>{{ command }}' >> {{ tmp_cmd_output_store }}
-    echo '{{ formatted_config }}' >> {{ tmp_cmd_output_store }}
-  delegate_to: localhost
+# - name: Append the checks to a file
+#   ansible.builtin.shell: |
+#     echo '' >> {{ tmp_cmd_output_store }}
+#     echo '==>{{ command }}' >> {{ tmp_cmd_output_store }}
+#     echo '{{ formatted_config }}' >> {{ tmp_cmd_output_store }}
+#   delegate_to: localhost
+#   ignore_errors: true
+#   when: command_output["failed"] == false
+
+- name: Determine file name
+  ansible.builtin.set_fact:
+    file_name: "{{ command }} | replace(' ', '_') }}.txt"
+  delegate_to: locahost
   ignore_errors: true
-  when: command_output["failed"] == false
+
+- name: Save output to a dynamically named file
+  ansible.builtin.copy:
+    content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
+    dest: "{{ root_dir }}/{{ file_name }}"
+  delegate_to: locahost
+  ignore_errors: true
