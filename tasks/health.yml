@@ -29,14 +29,14 @@
     file_name: "pre-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
   delegate_to: locahost
   ignore_errors: true
-  when: stage == 'pre'
+  when: pre_check
 
 - name: Set file name
   ansible.builtin.set_fact:
     file_name: "post-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
   delegate_to: locahost
   ignore_errors: true
-  when: stage == 'post'
+  when: post_check
 
 - name: Save output to a dynamically named file
   ansible.builtin.copy:
