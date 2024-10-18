@@ -24,7 +24,7 @@
 #   ignore_errors: true
 #   when: command_output["failed"] == false
 
-- name: Determine file name
+- name: Set file name
   ansible.builtin.set_fact:
     file_name: "{{ command }} | replace(' ', '_') }}.txt"
   delegate_to: locahost
