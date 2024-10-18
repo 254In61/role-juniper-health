@@ -33,6 +33,6 @@
 - name: Save output to a dynamically named file
   ansible.builtin.copy:
     content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
-    dest: "{{ root_dir }}/{{ file_name }}"
+    dest: "{{ tmp_root_dir }}/{{ file_name }}"
   delegate_to: locahost
   ignore_errors: true
