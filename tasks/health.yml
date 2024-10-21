@@ -1,28 +1,90 @@
 ---
-- name: Set file name - If pre upgrade
+# If you have many .txt files created in the root_dir, you still need to copy them to the local git repo.
+# Since the files creation happen under a loop, you want the repo to be existing already.
+- name: Clone the config backup git repository
+  ansible.builtin.git:
+    repo: "{{ git_repo_url }}"
+    dest: "{{ tmp_root_dir }}/{{ git_repo_name }}"
+    version: "{{ git_repo_branch }}"
+    force: yes       # Still clone down and overwrite incase local repo is existing.
+  ignore_errors: true
+  run_once: true
+  delegate_to: localhost
+
+- name: Set varibales
   ansible.builtin.set_fact:
-    file_name: "pre-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
-  delegate_to: locahost
-  ignore_errors: true
-  when: pre_check
+    inventory_hostname_dir_path: "{{ tmp_root_dir }}/{{ git_repo_name }}/{{ vendor_dir }}/{{ inventory_hostname }}"
+  delegate_to: localhost
 
-- name: Set file name - If post upgrade
-  ansible.builtin.set_fact:
-    file_name: "post-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
-  delegate_to: locahost
+- name: Ensure inventory_hostname dir is present - create if absent
+  ansible.builtin.file:
+    path: "{{ inventory_hostname_dir_path }}"
+    state: directory
   ignore_errors: true
-  when: post_check
+  delegate_to: localhost
 
-- name: "Run command => {{ command }}"
-  junipernetworks.junos.junos_command:
-    commands: "{{ command }}"
-    # display: set
-  register: command_output
-  ignore_errors: true
+- block:
 
-- name: Save output to a dynamically named file
-  ansible.builtin.copy:
-    content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
-    dest: "{{ tmp_root_dir }}/{{ file_name }}"
-  delegate_to: locahost
+    - name: Set file name - If pre upgrade
+      ansible.builtin.set_fact:
+        tmp_file_path: "{{ tmp_root_dir }}/pre-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
+      delegate_to: locahost
+      ignore_errors: true
+      when: pre_check
+
+    - name: Set file name - If post upgrade
+      ansible.builtin.set_fact:
+        tmp_file_path: "{{ tmp_root_dir }}/post-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
+      delegate_to: locahost
+      ignore_errors: true
+      when: post_check
+
+    - name: "Run command => {{ command }}"
+      junipernetworks.junos.junos_command:
+        commands: "{{ command }}"
+      register: command_output
+      ignore_errors: true
+
+    - name: Save output to a dynamically named file
+      ansible.builtin.copy:
+        content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
+        dest: "{{ tmp_file_path }}"
+      delegate_to: locahost
+      ignore_errors: true
+
+    - name: Copy the .txt file to local git repo
+      ansible.builtin.shell: |
+        cp {{ tmp_file_path }} {{ inventory_hostname_dir_path }}
+      ignore_errors: true
+      delegate_to: localhost
+
+  loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
+
+# ==> Run once tasks
+- name: List collected .txt files
+  ansible.builtin.shell: |
+    ls -l {{ tmp_root_dir }}
+  run_once: true
+  delegate_to: localhost
+  register: files_collection
+
+- name: Debug output
+  ansible.builtin.debug:
+    var: files_collection.stdout_lines
+  run_once: true
+  delegate_to: localhost
+
+- name: Commit the changes and push to the remote repository
+  ansible.builtin.shell: |
+     cd {{ tmp_root_dir }}/{{ git_repo_name }}
+     git config --global user.name {{ git_user }}
+     git config --global user.email {{ git_user_email }}
+     git add .
+     git commit -m "file updates on $(date)"
+     git push
+  run_once: true
   ignore_errors: true
+  delegate_to: localhost
+
+
+
