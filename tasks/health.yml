@@ -52,7 +52,7 @@
 
 - name: Debug outputs
   ansible.builtin.debug:
-    var: command_output
+    var: command_output.stdout[0]
   loop: "{{ command_list }}"
 
 - name: Save output to the dynamically named file
