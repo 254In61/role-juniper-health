@@ -50,7 +50,7 @@
 - name: Save command output to files
   ansible.builtin.copy:
     content: "{{ item.stdout }}"
-    dest: "{{ tmp_file_path }} {{ inventory_hostname_dir_path }}/{{ item.item | replace(' ', '_') }}.txt"
+    dest: "{{ inventory_hostname_dir_path }}/{{ item.item | replace(' ', '_') }}.txt"
   loop: "{{ command_output.results }}"
   # when: stdout != "" # Only save output if command was successful
 
@@ -83,6 +83,14 @@
      git add .
      git commit -m "file updates on $(date)"
      git push
+  run_once: true
+  ignore_errors: true
+  delegate_to: localhost
+
+- name: Clean up files
+  ansible.builtin.shell: |
+    cd {{ tmp_root_dir }}
+    rm -rf {{ git_repo_name }}
   run_once: true
   ignore_errors: true
   delegate_to: localhost
