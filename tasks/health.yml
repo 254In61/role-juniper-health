@@ -23,41 +23,35 @@
   ignore_errors: true
   delegate_to: localhost
 
-- block:
+- name: Set file name - If pre upgrade
+  ansible.builtin.set_fact:
+    tmp_file_path: "{{ tmp_root_dir }}/pre-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
+  delegate_to: locahost
+  ignore_errors: true
+  when: pre_check
+  loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
-    - name: Set file name - If pre upgrade
-      ansible.builtin.set_fact:
-        tmp_file_path: "{{ tmp_root_dir }}/pre-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
-      delegate_to: locahost
-      ignore_errors: true
-      when: pre_check
+- name: Set file name - If post upgrade
+  ansible.builtin.set_fact:
+    tmp_file_path: "{{ tmp_root_dir }}/post-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
+  delegate_to: locahost
+  ignore_errors: true
+  when: post_check
+  loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
-    - name: Set file name - If post upgrade
-      ansible.builtin.set_fact:
-        tmp_file_path: "{{ tmp_root_dir }}/post-upgrade-health-checks-{{ command | replace(' ', '_') }}.txt"
-      delegate_to: locahost
-      ignore_errors: true
-      when: post_check
+- name: "Run command => {{ command }}"
+  junipernetworks.junos.junos_command:
+    commands: "{{ command }}"
+  register: command_output
+  ignore_errors: true
+  loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
-    - name: "Run command => {{ command }}"
-      junipernetworks.junos.junos_command:
-        commands: "{{ command }}"
-      register: command_output
-      ignore_errors: true
-
-    - name: Save output to a dynamically named file
-      ansible.builtin.copy:
-        content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
-        dest: "{{ tmp_file_path }}"
-      delegate_to: locahost
-      ignore_errors: true
-
-    - name: Copy the .txt file to local git repo
-      ansible.builtin.shell: |
-        cp {{ tmp_file_path }} {{ inventory_hostname_dir_path }}
-      ignore_errors: true
-      delegate_to: localhost
-
+- name: Save output to the dynamically named file
+  ansible.builtin.copy:
+    content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
+    dest: "{{ tmp_file_path }}"
+  delegate_to: locahost
+  ignore_errors: true
   loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
 # ==> Run once tasks
@@ -74,17 +68,24 @@
   run_once: true
   delegate_to: localhost
 
-- name: Commit the changes and push to the remote repository
-  ansible.builtin.shell: |
-     cd {{ tmp_root_dir }}/{{ git_repo_name }}
-     git config --global user.name {{ git_user }}
-     git config --global user.email {{ git_user_email }}
-     git add .
-     git commit -m "file updates on $(date)"
-     git push
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
+# - name: Copy the .txt file to local git repo
+#   ansible.builtin.shell: |
+#     cp {{ tmp_file_path }} {{ inventory_hostname_dir_path }}
+#   ignore_errors: true
+#   delegate_to: localhost
+#   loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
+
+# - name: Commit the changes and push to the remote repository
+#   ansible.builtin.shell: |
+#      cd {{ tmp_root_dir }}/{{ git_repo_name }}
+#      git config --global user.name {{ git_user }}
+#      git config --global user.email {{ git_user_email }}
+#      git add .
+#      git commit -m "file updates on $(date)"
+#      git push
+#   run_once: true
+#   ignore_errors: true
+#   delegate_to: localhost
 
 
 
