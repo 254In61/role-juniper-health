@@ -34,23 +34,24 @@
   ignore_errors: true
   loop: "{{ command_list }}"
 
-- name: Debug outputs
-  ansible.builtin.debug:
-    var: command_output
-  loop: "{{ command_list }}"
-
-# - name: Save output to the dynamically named file
-#   ansible.builtin.copy:
-#     content: "{{ command_output.stdout[0] | regex_replace('\r\n', '\n') }}"
-#     dest: "{{ tmp_file_path }}"
-#   delegate_to: locahost
-#   ignore_errors: true
+# - name: Debug outputs
+#   ansible.builtin.debug:
+#     var: command_output
 #   loop: "{{ command_list }}"
 
-- name: Save command output to files
+- name: Save command output to dynamically named files
   ansible.builtin.copy:
     content: "{{ item.stdout[0] }}"
-    dest: "{{ inventory_hostname_dir_path }}/{{ item.item | replace(' ', '_') }}.txt"
+    dest: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+  when: pre_checks
+  loop: "{{ command_output.results }}"
+  # when: stdout != "" # Only save output if command was successful
+
+- name: Save command output to dynamically named files
+  ansible.builtin.copy:
+    content: "{{ item.stdout[0] }}"
+    dest: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+  when: post_checks
   loop: "{{ command_output.results }}"
   # when: stdout != "" # Only save output if command was successful
 
@@ -67,13 +68,6 @@
     var: files_collection.stdout_lines
   run_once: true
   delegate_to: localhost
-
-# - name: Copy the .txt file to local git repo
-#   ansible.builtin.shell: |
-#     cp {{ tmp_file_path }} {{ inventory_hostname_dir_path }}
-#   ignore_errors: true
-#   delegate_to: localhost
-#   loop: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
