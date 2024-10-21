@@ -27,7 +27,7 @@
   ansible.builtin.set_fact:
     command_list: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
-- name: "Run command => {{ command }}"
+- name: Run command
   junipernetworks.junos.junos_command:
     commands: "{{ item }}"
   register: command_output
