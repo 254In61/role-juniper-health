@@ -51,7 +51,7 @@
   loop: "{{ command_list }}"
 
 - name: Debug outputs
-  ansible.buitin.debug:
+  ansible.builtin.debug:
     var: item.command_output
   loop: "{{ command_list }}"
 
