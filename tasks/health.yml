@@ -49,7 +49,7 @@
 
 - name: Save command output to files
   ansible.builtin.copy:
-    content: "{{ item.stdout }}"
+    content: "{{ item.stdout[0] }}"
     dest: "{{ inventory_hostname_dir_path }}/{{ item.item | replace(' ', '_') }}.txt"
   loop: "{{ command_output.results }}"
   # when: stdout != "" # Only save output if command was successful
