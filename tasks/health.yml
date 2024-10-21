@@ -68,7 +68,7 @@
     content: "{{ item.stdout }}"
     dest: "{{ output_dir }}/{{ item.item | replace(' ', '_') }}.txt"
   loop: "{{ command_output.results }}"
-  when: item.rc == 0  # Only save output if command was successful
+  # when: stdout != "" # Only save output if command was successful
 
 # ==> Run once tasks
 - name: List collected .txt files
