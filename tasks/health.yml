@@ -66,7 +66,7 @@
 - name: Save command output to files
   ansible.builtin.copy:
     content: "{{ item.stdout }}"
-    dest: "{{ output_dir }}/{{ item.item | replace(' ', '_') }}.txt"
+    dest: "{{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt"
   loop: "{{ command_output.results }}"
   # when: stdout != "" # Only save output if command was successful
 
