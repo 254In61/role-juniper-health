@@ -45,6 +45,8 @@
     dest: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
   when: pre_checks
   loop: "{{ command_output.results }}"
+  ignore_errors: true
+  delegate_to: localhost
   # when: stdout != "" # Only save output if command was successful
 
 - name: Save command output to dynamically named files
@@ -53,6 +55,8 @@
     dest: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
   when: post_checks
   loop: "{{ command_output.results }}"
+  ignore_errors: true
+  delegate_to: localhost
   # when: stdout != "" # Only save output if command was successful
 
 # ==> Run once tasks
