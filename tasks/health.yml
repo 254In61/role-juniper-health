@@ -67,11 +67,11 @@
   delegate_to: localhost
   register: files_collection
 
-- name: Debug output
-  ansible.builtin.debug:
-    var: files_collection.stdout_lines
-  run_once: true
-  delegate_to: localhost
+# - name: Debug output
+#   ansible.builtin.debug:
+#     var: files_collection.stdout_lines
+#   run_once: true
+#   delegate_to: localhost
 
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
