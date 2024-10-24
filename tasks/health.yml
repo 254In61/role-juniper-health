@@ -1,6 +1,6 @@
 ---
-# If you have many .txt files created in the root_dir, you still need to copy them to the local git repo.
-# Since the files creation happen under a loop, you want the repo to be existing already.
+# If you have many .txt files created it's more efficient to write them directly into the local git repo.
+# NOT write them on some temporary file and then transfer like the config backup.
 - name: Clone the config backup git repository
   ansible.builtin.git:
     repo: "{{ git_repo_url }}"
@@ -75,6 +75,28 @@
 #   run_once: true
 #   delegate_to: localhost
 
+# Perform diff checks between pre and post and save it in git too.
+- block: 
+    - name: Set the file paths
+      set_fact:
+        file1: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+        file2: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+        diff_output_file: "{{ inventory_hostname_dir_path }}/diff-check-{{ item.item | replace(' ', '_') }}.txt"
+    
+    - name: Compare two files and save the diff output
+      ansible.builtin.command:
+        cmd: "diff {{ file1 }} {{ file2 }} > {{ diff_output_file }}"
+      args:
+        creates: "{{ diff_output_file }}"
+
+    - name: Show diff output
+      ansible.builtin.command:
+        cmd: "cat {{ diff_output_file }}"
+
+  when: post_checks
+  delegate_to: localhost
+  ignore_errors: true
+
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
      cd {{ tmp_root_dir }}/{{ git_repo_name }}
@@ -88,6 +110,8 @@
   run_once: true
   ignore_errors: true
   delegate_to: localhost
+
+
 
 # Might not need this since containers are ephemeral.
 # But if testing or end up running the playbook more than once in the same container, this comes in handy
