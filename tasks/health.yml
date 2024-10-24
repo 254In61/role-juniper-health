@@ -63,20 +63,6 @@
   delegate_to: localhost
   # when: stdout != "" # Only save output if command was successful
 
-# ==> Run once tasks
-- name: List collected .txt files
-  ansible.builtin.shell: |
-    ls -l {{ inventory_hostname_dir_path }}
-  run_once: true
-  delegate_to: localhost
-  register: files_collection
-
-- name: Debug output
-  ansible.builtin.debug:
-    var: files_collection.stdout_lines
-  run_once: true
-  delegate_to: localhost
-
 # Perform diff checks between pre and post and save it in git too.
 - block: 
     - name: Set the file paths
@@ -97,6 +83,20 @@
   when: post_checks
   delegate_to: localhost
   ignore_errors: true
+
+# ==> Run once tasks
+- name: List collected .txt files
+  ansible.builtin.shell: |
+    ls -l {{ inventory_hostname_dir_path }}
+  run_once: true
+  delegate_to: localhost
+  register: files_collection
+
+- name: Debug output
+  ansible.builtin.debug:
+    var: files_collection.stdout_lines
+  run_once: true
+  delegate_to: localhost
 
 - name: Commit the changes and push to the remote repository
   ansible.builtin.shell: |
