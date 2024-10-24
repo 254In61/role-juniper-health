@@ -29,6 +29,8 @@
   ansible.builtin.set_fact:
     command_list: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
 
+# This task produces a dictionary of results for each command run.
+# You want to read the 'result' of each item
 - name: Run command
   junipernetworks.junos.junos_command:
     commands: "{{ item }}"
@@ -69,29 +71,28 @@
   delegate_to: localhost
   register: files_collection
 
-# - name: Debug output
-#   ansible.builtin.debug:
-#     var: files_collection.stdout_lines
-#   run_once: true
-#   delegate_to: localhost
+- name: Debug output
+  ansible.builtin.debug:
+    var: files_collection.stdout_lines
+  run_once: true
+  delegate_to: localhost
 
 # Perform diff checks between pre and post and save it in git too.
 - block: 
     - name: Set the file paths
-      set_fact:
-        file1: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
-        file2: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
-        diff_output_file: "{{ inventory_hostname_dir_path }}/diff-check-{{ item.item | replace(' ', '_') }}.txt"
+      ansible.builtin.set_fact:
+        file_1_base_name: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check"
+        file_2_base_name: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check"
+        diff_output_file_base_name: "{{ inventory_hostname_dir_path }}/diff-check"
     
     - name: Compare two files and save the diff output
-      ansible.builtin.command:
-        cmd: "diff {{ file1 }} {{ file2 }} > {{ diff_output_file }}"
-      args:
-        creates: "{{ diff_output_file }}"
+      ansible.builtin.shell: |
+        diff {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt"
+      loop: "{{ command_output.results }}"
 
-    - name: Show diff output
-      ansible.builtin.command:
-        cmd: "cat {{ diff_output_file }}"
+    # - name: Show diff output
+    #   ansible.builtin.command:
+    #     cmd: "cat {{ diff_output_file }}"
 
   when: post_checks
   delegate_to: localhost
