@@ -87,13 +87,13 @@
     
     - name: Compare two files and save the diff output
       ansible.builtin.shell: |
-        diff {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt"
+        diff {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt
       loop: "{{ command_output.results }}"
 
     # - name: Show diff output
     #   ansible.builtin.command:
     #     cmd: "cat {{ diff_output_file }}"
-    
+
   when: post_checks
   delegate_to: localhost
   ignore_errors: true
