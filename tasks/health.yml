@@ -1,4 +1,12 @@
 ---
+- name: Clean up files  # Ensure no git conflicts
+  ansible.builtin.shell: |
+    cd {{ tmp_root_dir }}
+    rm -rf {{ git_repo_name }}
+  run_once: true
+  ignore_errors: true
+  delegate_to: localhost
+
 # If you have many .txt files created it's more efficient to write them directly into the local git repo.
 # NOT write them on some temporary file and then transfer like the config backup.
 - name: Clone the config backup git repository
@@ -11,6 +19,18 @@
   environment:
     GIT_SSL_NO_VERIFY: "true"
   run_once: true
+  delegate_to: localhost
+
+# Enable git lfs by default
+- name: Enable git lfs by default
+  ansible.builtin.shell: |
+    cd {{ tmp_root_dir }}/{{ git_repo_name }}
+    git lfs track "*.bin"
+    git lfs track "*.ucs"
+    git lfs track "*.tgz" 
+    git lfs pull 
+  run_once: true
+  ignore_errors: true
   delegate_to: localhost
 
 - name: Set inventory_hostname directory name
