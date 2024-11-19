@@ -107,6 +107,7 @@
       ansible.builtin.shell: |
         echo "" >> {{ diff_output_report }}
         echo "##### command : {{ item.item }}" >> {{ diff_output_report }}
+        echo "" >> {{ diff_output_report }}
         diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt >> {{ diff_output_report }}
       loop: "{{ command_output.results }}"
 
