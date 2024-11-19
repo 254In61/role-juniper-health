@@ -89,11 +89,20 @@
       ansible.builtin.set_fact:
         file_1_base_name: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check"
         file_2_base_name: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check"
-        diff_output_file_base_name: "{{ inventory_hostname_dir_path }}/diff-check"
+        # diff_output_file_base_name: "{{ inventory_hostname_dir_path }}/diff-check"
+        diff_output_report: "{{ inventory_hostname_dir_path }}/post-upgrade-diff-report.txt"
     
+    # - name: Compare two files and save the diff output
+    #   ansible.builtin.shell: |
+    #     diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt
+    #   loop: "{{ command_output.results }}"
+
+    # TPG want just 1 diff file with all the outputs shown.
     - name: Compare two files and save the diff output
       ansible.builtin.shell: |
-        diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt
+        echo "" >> {{ diff_output_report }}
+        echo "=== command : {{ item.item }} ====" >> {{ diff_output_report }}
+        diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_report }}
       loop: "{{ command_output.results }}"
 
     # - name: Show diff output
