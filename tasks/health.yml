@@ -40,7 +40,7 @@
 - name: "Write health check outputs to {{ tmp_root_dir }}/{{ file_name }}"
   ansible.builtin.shell: |
     echo "" >> {{ tmp_root_dir }}/{{ file_name }}
-    echo "##### command : {{ tmp_root_dir }}/{{ item.item | replace('_', ' ') }}.txt" >> {{ tmp_root_dir }}/{{ file_name }}
+    echo "##### command : {{ item.item | replace('_', ' ') }}" >> {{ tmp_root_dir }}/{{ file_name }}
     cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ tmp_root_dir }}/{{ file_name }}
     echo "" >> {{ tmp_root_dir }}/{{ file_name }}
   loop: "{{ command_output.results }}"
