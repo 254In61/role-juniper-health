@@ -12,13 +12,16 @@
   when: post_checks
   delegate_to: localhost
 
-  
+# Junos ansible facts
+- name: Import git tasks
+  ansible.builtin.import_tasks: junos-facts.yml
+
 # Read the health-checks commands files and create a list of commands to run
 - name: Set more variables
   ansible.builtin.set_fact:
     diff_file: "{{ diff_output_html_file }}"
     command_list: "{{ lookup('file', '{{ health_checks }}').splitlines() }}"
-  delegate_to: localhost  
+  delegate_to: localhost
 
 # This task produces a dictionary of results for each command run.
 - name: Run command
@@ -49,15 +52,15 @@
   loop: "{{ command_output.results }}"
   delegate_to: localhost
 
-- name: "Read contents of {{ tmp_root_dir }}/{{ file_name }}"
-  ansible.builtin.set_fact:
-    file_contents: "{{ lookup('file', '{{ tmp_root_dir }}/{{ file_name }}') }}"
-  delegate_to: localhost
+# - name: "Read contents of {{ tmp_root_dir }}/{{ file_name }}"
+#   ansible.builtin.set_fact:
+#     file_contents: "{{ lookup('file', '{{ tmp_root_dir }}/{{ file_name }}') }}"
+#   delegate_to: localhost
 
-- name: Print file contents
-  ansible.builtin.debug:
-    msg: "{{ file_contents }}"
-  delegate_to: localhost  
+# - name: Print file contents
+#   ansible.builtin.debug:
+#     msg: "{{ file_contents }}"
+#   delegate_to: localhost  
 
 # git operations
 - name: Import git tasks
