@@ -50,10 +50,8 @@
   ignore_errors: true
   delegate_to: localhost
 
-- name: Do a diff if on post_check stage
-  ansible.builtin.shell: |
-    /bin/vimdiff "{{ inventory_hostname_dir_path }}/{{ pre_checks_output_file }}" "{{ inventory_hostname_dir_path }}/{{ post_checks_output_file }}" -c 'let g:html_number_lines = 1' -c TOhtml -c "w! {{ inventory_hostname_dir_path }}/{{ diff_file }} | qa!"
-  delegate_to: localhost
+- name: Import diff tasks if on post checks
+  ansible.builtin.import_tasks: diff.yml
   when: post_checks
 
 - name: Git commit the changes and push to the remote repository
