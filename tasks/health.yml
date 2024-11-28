@@ -14,8 +14,8 @@
 
 # Junos ansible facts
 # Not writing.. To be looked into as enhancement
-# - name: Import git tasks
-#   ansible.builtin.import_tasks: junos-facts.yml
+- name: Import git tasks
+  ansible.builtin.import_tasks: junos-facts.yml
 
 # Read the health-checks commands files and create a list of commands to run
 - name: Set more variables
