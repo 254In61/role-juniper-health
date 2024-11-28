@@ -34,7 +34,6 @@
     echo "RE1 Master state : {{ junos_facts.ansible_facts.ansible_net_routing_engines.1.mastership_state  }}" >> {{ tmp_root_dir }}/{{ file_name }}
     echo "RE1 temperature  : {{ junos_facts.ansible_facts.ansible_net_routing_engines.1.temperature  }}" >> {{ tmp_root_dir }}/{{ file_name }}
     echo "RE1 uptime       : {{ junos_facts.ansible_facts.ansible_net_routing_engines.1.up_time  }}" >> {{ tmp_root_dir }}/{{ file_name }}
-
-  loop: "{{ command_output.results }}"
   delegate_to: localhost
+  ignore_errors: true
   
