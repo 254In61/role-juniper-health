@@ -44,14 +44,9 @@
   ignore_errors: true
   delegate_to: localhost
 
-- name: "Copy {{ file_name }} to local git repo"
-  ansible.builtin.copy:
-    content: "{{ file_name }}"
-    dest: "{{ inventory_hostname_dir_path }}/{{ file_name }}"
-  delegate_to: localhost
-
-- name: Commit the changes and push to the remote repository
+- name: "Copy {{ file_name }} to local git repo and Commit the changes and push to the remote repository"
   ansible.builtin.shell: |
+     cp {{ tmp_root_dir }}/{{ file_name }} {{ inventory_hostname_dir_path }}/{{ file_name }}
      cd {{ tmp_root_dir }}/{{ git_repo_name }}
      git config --global user.name {{ git_user }}
      git config --global user.email {{ git_user_email }}
