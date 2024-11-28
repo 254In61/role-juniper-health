@@ -42,6 +42,16 @@
   loop: "{{ command_output.results }}"
   delegate_to: localhost
 
+- name: "Read contencts of {{ file name }}"
+  ansible.builtin.shell: |
+    cat {{ file_name }}
+  register: file_contents
+  delegate_to: localhost
+
+- name: Debug output
+  ansible.builtin.debug:
+    var: file_contents
+
 # git operations
 - name: Import git tasks
   ansible.builtin.import_tasks: git.yml
