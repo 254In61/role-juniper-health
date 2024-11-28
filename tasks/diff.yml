@@ -30,3 +30,10 @@
   loop_control:
     label: "{{ item.label }}"
   delegate_to: localhost
+
+# Avoiding need to define long file paths for notifications task
+# Or maybe should I be 'inspired' to delete local git repo after git operations tasks
+- name: "Make a copy of the file to {{ tmp_root_dir }} for email attachment"
+  ansible.builtin.shell: |
+    cp {{ inventory_hostname_dir_path }}/{{ diff_file }} {{ tmp_root_dir }}/{{ diff_file }}
+  delegate_to: localhost
