@@ -4,16 +4,20 @@
   ansible.builtin.set_fact:
     file_name: "{{ pre_checks_output_file }}"
   when: pre_checks
+  delegate_to: localhost
 
 - name: Set file name if pre-health-checks
   ansible.builtin.set_fact:
     file_name: "{{ post_checks_output_file }}"
   when: post_checks
+  delegate_to: localhost
 
+  
 # Read the health-checks commands files and create a list of commands to run
 - name: Identify commands list
   ansible.builtin.set_fact:
     command_list: "{{ lookup('file', '{{ health_checks }}').splitlines() }}"
+  delegate_to: localhost  
 
 # This task produces a dictionary of results for each command run.
 - name: Run command
@@ -33,24 +37,24 @@
   # when: stdout != "" # Only save output if command was successful
 
 # Combine the output to a single file
-- name: "Write health check outputs to {{ file_name }}"
+- name: "Write health check outputs to {{ tmp_root_dir }}/{{ file_name }}"
   ansible.builtin.shell: |
-    echo "" >> {{ file_name }}
-    echo "##### command : {{ tmp_root_dir }}/{{ item.item | replace('_', ' ') }}.txt" >> {{ file_name }}
-    cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ file_name }}
-    echo "" >> {{ file_name }}
+    echo "" >> {{ tmp_root_dir }}/{{ file_name }}
+    echo "##### command : {{ tmp_root_dir }}/{{ item.item | replace('_', ' ') }}.txt" >> {{ tmp_root_dir }}/{{ file_name }}
+    cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ tmp_root_dir }}/{{ file_name }}
+    echo "" >> {{ tmp_root_dir }}/{{ file_name }}
   loop: "{{ command_output.results }}"
   delegate_to: localhost
 
-- name: "Read contencts of {{ file name }}"
-  ansible.builtin.shell: |
-    cat {{ file_name }}
-  register: file_contents
+- name: "Read contents of {{ tmp_root_dir }}/{{ file_name }}"
+  ansible.set_fact: set_fact:
+    file_contents: "{{ lookup('file', '{{ tmp_root_dir }}/{{ file_name }}') }}"
   delegate_to: localhost
 
-- name: Debug output
+- name: Print file contents
   ansible.builtin.debug:
-    var: file_contents
+    msg: "{{ file_contents }}"
+  delegate_to: localhost  
 
 # git operations
 - name: Import git tasks
