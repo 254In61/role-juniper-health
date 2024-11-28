@@ -7,11 +7,26 @@
 #   delegate_to: localhost
 #   # when: post_checks
 
-- name: Create diff in html format during post
-  ansible.builtin.include_role:
-    name: tpg.ndecollection.diffutils
-  vars:
+# Copied this from collections-git
+
+- name: Create file variables
+  ansible.builtin.set_fact:
     file_pre: "{{ inventory_hostname_dir_path }}/{{ pre_checks_output_file }}"
     file_post: "{{ inventory_hostname_dir_path }}/{{ post_checks_output_file }}"
     file_output_html: "{{ inventory_hostname_dir_path }}/{{ diff_file }}"
     colour_scheme: "dark"
+
+- name: Generate diff output as html
+  ansible.builtin.shell: /bin/vimdiff "{{ file_pre }}" "{{ file_post }}" -c 'let g:html_number_lines = 1' -c TOhtml -c "w! {{ file_output_html }} | qa!"
+  delegate_to: localhost
+
+- name: "Set color scheme to {{ _colour_scheme }}"
+  ansible.builtin.replace:
+    path: "{{ file_output_html }}"
+    regexp: "{{ item.regex }}"
+    replace: "{{ item.replace }}"
+    backup: false
+  loop: "{{ _diff_regexs }}"
+  loop_control:
+    label: "{{ item.label }}"
+  delegate_to: localhost

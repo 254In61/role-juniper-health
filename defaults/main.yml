@@ -1,0 +1,71 @@
+---
+_colours:
+  white: "#FFFFFF"
+  black: "#000000"
+  blue1: "#3874ae"
+  blue2: "#7cabf1"
+  blue3: "#00FFFF"
+  brown1: "#544120"
+  green1: "#3FB950"
+  green2: "#9af199"
+  green3: "#deeede"
+  lilac: "#8080FF"
+  red1: "#bb5f4c"
+  red2: "#e28059"
+  red3: "#e23137"
+  watermellon: "#FF6060"
+  yellow1: "FFFF00"
+  yellow2: "#fdf2d2"
+
+_colour_scheme: "{{ colour_scheme | default('dark') }}"
+_colour_schemes:
+  light:
+    pre_fg:         "{{ _colours.black }}"
+    pre_bg:         "{{ _colours.white }}"
+    body_fg:        "{{ _colours.black }}"
+    body_bg:        "{{ _colours.white }}"
+    linenr:         "{{ _colours.blue1 }}"
+    diff_text_fg:   "{{ _colours.white }}"
+    diff_text_bg:   "{{ _colours.green1 }}"
+    diff_add_fg:    "{{ _colours.white }}"
+    diff_add_bg:    "{{ _colours.green1 }}"
+    diff_change:    "{{ _colours.green3 }}"
+    diff_delete_fg: "{{ _colours.red3 }}"
+    diff_delete_bg: "{{ _colours.white }}"
+  dark:
+    pre_fg:         "{{ _colours.white }}"
+    pre_bg:         "{{ _colours.black }}"
+    body_fg:        "{{ _colours.white }}"
+    body_bg:        "{{ _colours.black }}"
+    linenr:         "{{ _colours.yellow1 }}"
+    diff_text_fg:   "{{ _colours.white }}"
+    diff_text_bg:   "{{ _colours.green1 }}"
+    diff_add_fg:    "{{ _colours.white }}"
+    diff_add_bg:    "{{ _colours.green1 }}"
+    diff_change:    "{{ _colours.brown1 }}"
+    diff_delete_fg: "{{ _colours.black }}"
+    diff_delete_bg: "{{ _colours.red1 }}"
+_scheme: "{{ _colour_schemes[_colour_scheme] }}"
+
+_diff_regexs:
+  - regex: '^(body.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.body_fg }}; background-color: {{ _scheme.body_bg }};"
+    label: "body"
+  - regex: '^(pre.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.pre_fg }}; background-color: {{ _scheme.pre_bg }};"
+    label: "pre"
+  - regex: '^(\.LineNr.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.linenr }}; background-color: {{ _scheme.body_bg }};"
+    label: "line number"
+  - regex: '^(\.DiffText.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.diff_text_fg }}; background-color: {{ _scheme.diff_text_bg }};"
+    label: "diff text"
+  - regex: '^(\.DiffAdd.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.diff_add_fg }}; background-color: {{ _scheme.diff_add_bg }};"
+    label: "diff add"
+  - regex: '^(\.DiffChange.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 background-color: {{ _scheme.diff_change }};"
+    label: "diff change"
+  - regex: '^(\.DiffDelete.*?)( (color|background-color): #\w+;)+'
+    replace: "\\1 color: {{ _scheme.diff_delete_fg }}; background-color: {{ _scheme.diff_delete_bg }};"
+    label: "diff delete"
