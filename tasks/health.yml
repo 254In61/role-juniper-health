@@ -47,7 +47,7 @@
   delegate_to: localhost
 
 - name: "Read contents of {{ tmp_root_dir }}/{{ file_name }}"
-  ansible.set_fact: set_fact:
+  ansible.set_fact:
     file_contents: "{{ lookup('file', '{{ tmp_root_dir }}/{{ file_name }}') }}"
   delegate_to: localhost
 
