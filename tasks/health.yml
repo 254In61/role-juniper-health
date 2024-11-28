@@ -14,8 +14,9 @@
 
   
 # Read the health-checks commands files and create a list of commands to run
-- name: Identify commands list
+- name: Set more variables
   ansible.builtin.set_fact:
+    diff_file: "{{ diff_output_html_file }}"
     command_list: "{{ lookup('file', '{{ health_checks }}').splitlines() }}"
   delegate_to: localhost  
 
@@ -61,6 +62,8 @@
 # git operations
 - name: Import git tasks
   ansible.builtin.import_tasks: git.yml
+
+
 
 
 
