@@ -24,8 +24,8 @@
   ansible.builtin.shell: |
     echo "" >> {{ tmp_root_dir }}/{{ file_name }}
     echo "##### JUNOS ANSIBLE FACTS ####" >> {{ tmp_root_dir }}/{{ file_name }}
-    echo "software version : {{ junos_facts.ansible_facts.ansible_net_version }}" >> {{ tmp_root_dir }}/{{ file_name }}
-    echo "device model     : {{ junos_facts.ansible_facts.ansible_net_model  }}" >> {{ tmp_root_dir }}/{{ file_name }}
+    echo "software version = {{ junos_facts.ansible_facts.ansible_net_version }}" >> {{ tmp_root_dir }}/{{ file_name }}
+    echo "device model     = {{ junos_facts.ansible_facts.ansible_net_model  }}" >> {{ tmp_root_dir }}/{{ file_name }}
   delegate_to: localhost
   ignore_errors: true
   
