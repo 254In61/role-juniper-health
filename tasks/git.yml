@@ -44,15 +44,20 @@
   ignore_errors: true
   delegate_to: localhost
 
+- name: "Copy {{ file_name }} to local git repo "
+  ansible.builtin.shell: |
+     cp {{ tmp_root_dir }}/{{ file_name }} {{ inventory_hostname_dir_path }}/{{ file_name }}
+  ignore_errors: true
+  delegate_to: localhost
+
 - name: Do a diff if on post_check stage
   ansible.builtin.shell: |
-    /bin/vimdiff "{{ pre_checks_output_file }}" "{{ post_checks_output_file }}" -c 'let g:html_number_lines = 1' -c TOhtml -c "w! {{ diff_file }} | qa!"
+    /bin/vimdiff "{{ inventory_hostname_dir_path }}/{{ pre_checks_output_file }}" "{{ inventory_hostname_dir_path }}/{{ post_checks_output_file }}" -c 'let g:html_number_lines = 1' -c TOhtml -c "w! {{ inventory_hostname_dir_path }}/{{ diff_file }} | qa!"
   delegate_to: localhost
   when: post_checks
 
-- name: "Copy {{ file_name }} to local git repo and Commit the changes and push to the remote repository"
+- name: Git commit the changes and push to the remote repository
   ansible.builtin.shell: |
-     cp {{ tmp_root_dir }}/{{ file_name }} {{ inventory_hostname_dir_path }}/{{ file_name }}
      cd {{ tmp_root_dir }}/{{ git_repo_name }}
      git config --global user.name {{ git_user }}
      git config --global user.email {{ git_user_email }}
