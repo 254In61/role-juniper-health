@@ -1,56 +1,57 @@
 ---
-- name: Clean up files  # Ensure no git conflicts
-  ansible.builtin.shell: |
-    cd {{ tmp_root_dir }}
-    rm -rf {{ git_repo_name }}
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
-
+### ===> If it is about having a file for each command
 # If you have many .txt files created it's more efficient to write them directly into the local git repo.
 # NOT write them on some temporary file and then transfer like the config backup.
-- name: Clone the config backup git repository
-  ansible.builtin.git:
-    repo: "{{ git_repo_url }}"
-    dest: "{{ tmp_root_dir }}/{{ git_repo_name }}"
-    version: "{{ git_repo_branch }}"
-    force: yes       # Still clone down and overwrite incase local repo is existing.
-  # ignore_errors: true # You want your play to fail if there's no repo cloned down
-  environment:
-    GIT_SSL_NO_VERIFY: "true"
-  run_once: true
-  delegate_to: localhost
+# - name: Save command output to dynamically named files
+#   ansible.builtin.copy:
+#     content: "{{ item.stdout[0] }}"
+#     dest: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+#   when: pre_checks
+#   loop: "{{ command_output.results }}"
+#   ignore_errors: true
+#   delegate_to: localhost
+#   # when: stdout != "" # Only save output if command was successful
 
-# Enable git lfs by default
-- name: Enable git lfs by default
-  ansible.builtin.shell: |
-    cd {{ tmp_root_dir }}/{{ git_repo_name }}
-    git lfs track "*.bin"
-    git lfs track "*.ucs"
-    git lfs track "*.tgz" 
-    git lfs pull 
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
+# - name: Save command output to dynamically named files
+#   ansible.builtin.copy:
+#     content: "{{ item.stdout[0] }}"
+#     dest: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+#   when: post_checks
+#   loop: "{{ command_output.results }}"
+#   ignore_errors: true
+#   delegate_to: localhost
+#   # when: stdout != "" # Only save output if command was successful
 
-- name: Set inventory_hostname directory name
+#  - name: Save health check outputs to a file
+# ansible.builtin.copy:
+#   content: "{{ item.stdout[0] }}"
+#   dest: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
+# loop: "{{ command_output.results }}"
+# ignore_errors: true
+# delegate_to: localhost
+# # when: stdout != "" # Only save output if command was successful
+
+### ===> Here we have 1 file for pre-checks and 1 file for post-checks.
+### Makes it easier to do a diff between the 2 and have one output.
+
+
+#Identify if pre-health-checks or post-health-checks and name the file accordingly
+- name: Set file name if pre-health-checks
   ansible.builtin.set_fact:
-    inventory_hostname_dir_path: "{{ tmp_root_dir }}/{{ git_repo_name }}/{{ vendor_dir }}/{{ inventory_hostname }}/health-checks"
-  delegate_to: localhost
+    file_name: "{{ pre_checks_output_file }}"
+  when: pre_checks
 
-- name: Ensure inventory_hostname dir is present - create if absent
-  ansible.builtin.file:
-    path: "{{ inventory_hostname_dir_path }}"
-    state: directory
-  ignore_errors: true
-  delegate_to: localhost
+- name: Set file name if pre-health-checks
+  ansible.builtin.set_fact:
+    file_name: "{{ post_checks_output_file }}"
+  when: post_checks
 
+# Read the health-checks commands files and create a list of commands to run
 - name: Identify commands list
   ansible.builtin.set_fact:
-    command_list: "{{ lookup('file', '{{ commands_file }}').splitlines() }}"
+    command_list: "{{ lookup('file', '{{ health_checks }}').splitlines() }}"
 
 # This task produces a dictionary of results for each command run.
-# You want to read the 'result' of each item
 - name: Run command
   junipernetworks.junos.junos_command:
     commands: "{{ item }}"
@@ -58,107 +59,116 @@
   ignore_errors: true
   loop: "{{ command_list }}"
 
+# You want to read the 'result' of each item
+- name: "Write health check outputs to {{ file_name }}"
+  ansible.builtin.shell: |
+    echo "" >> {{ file_name }}
+    echo "##### command : {{ item.item }}" >> {{ file_name }}
+    echo "" >> {{ file_name }}
+    echo "{{ item.stdout[0] }}" >> {{ file_name }}
+    echo "" >> {{ diff_output_report }}
+  loop: "{{ command_output.results }}"
+  delegate_to: localhost
+
+# git operations
+- name: Import git tasks
+  ansible.builtin.import_tasks: git.yml
+
+
+
+
+
+
+
+
+
+
+
+
+
 # - name: Debug outputs
 #   ansible.builtin.debug:
 #     var: command_output
 #   loop: "{{ command_list }}"
 
-- name: Save command output to dynamically named files
-  ansible.builtin.copy:
-    content: "{{ item.stdout[0] }}"
-    dest: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
-  when: pre_checks
-  loop: "{{ command_output.results }}"
-  ignore_errors: true
-  delegate_to: localhost
-  # when: stdout != "" # Only save output if command was successful
 
-- name: Save command output to dynamically named files
-  ansible.builtin.copy:
-    content: "{{ item.stdout[0] }}"
-    dest: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check-{{ item.item | replace(' ', '_') }}.txt"
-  when: post_checks
-  loop: "{{ command_output.results }}"
-  ignore_errors: true
-  delegate_to: localhost
-  # when: stdout != "" # Only save output if command was successful
 
-# Perform diff checks between pre and post and save it in git too.
-- block: 
-    - name: Set the file paths
-      ansible.builtin.set_fact:
-        file_1_base_name: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check"
-        file_2_base_name: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check"
-        # diff_output_file_base_name: "{{ inventory_hostname_dir_path }}/diff-check"
-        diff_output_report: "{{ inventory_hostname_dir_path }}/post-upgrade-diff-report.txt"
+# # Perform diff checks between pre and post and save it in git too.
+# - block: 
+#     - name: Set the file paths
+#       ansible.builtin.set_fact:
+#         file_1_base_name: "{{ inventory_hostname_dir_path }}/pre-upgrade-health-check"
+#         file_2_base_name: "{{ inventory_hostname_dir_path }}/post-upgrade-health-check"
+#         # diff_output_file_base_name: "{{ inventory_hostname_dir_path }}/diff-check"
+#         diff_output_report: "{{ inventory_hostname_dir_path }}/post-upgrade-diff-report.txt"
     
-    # - name: Compare two files and save the diff output
-    #   ansible.builtin.shell: |
-    #     diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt
-    #   loop: "{{ command_output.results }}"
+#     # - name: Compare two files and save the diff output
+#     #   ansible.builtin.shell: |
+#     #     diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt > {{ diff_output_file_base_name }}-{{ item.item | replace(' ', '_') }}.txt
+#     #   loop: "{{ command_output.results }}"
 
-    - name: Refresh diff-report file
-      ansible.builtin.shell: |
-        echo "" > {{ diff_output_report }}
-      delegate_to: localhost
+#     - name: Refresh diff-report file
+#       ansible.builtin.shell: |
+#         echo "" > {{ diff_output_report }}
+#       delegate_to: localhost
     
-    # TPG want just 1 diff file with all the outputs shown.
-    - name: Compare two files and write to diff-report file
-      ansible.builtin.shell: |
-        echo "" >> {{ diff_output_report }}
-        echo "##### command : {{ item.item }}" >> {{ diff_output_report }}
-        echo "" >> {{ diff_output_report }}
-        diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt >> {{ diff_output_report }}
-        echo "" >> {{ diff_output_report }}
-      loop: "{{ command_output.results }}"
+#     # TPG want just 1 diff file with all the outputs shown.
+#     - name: Compare two files and write to diff-report file
+#       ansible.builtin.shell: |
+#         echo "" >> {{ diff_output_report }}
+#         echo "##### command : {{ item.item }}" >> {{ diff_output_report }}
+#         echo "" >> {{ diff_output_report }}
+#         diff -y {{ file_1_base_name }}-{{ item.item | replace(' ', '_') }}.txt {{ file_2_base_name }}-{{ item.item | replace(' ', '_') }}.txt >> {{ diff_output_report }}
+#         echo "" >> {{ diff_output_report }}
+#       loop: "{{ command_output.results }}"
 
-    # - name: Show diff output
-    #   ansible.builtin.command:
-    #     cmd: "cat {{ diff_output_file }}"
+#     # - name: Show diff output
+#     #   ansible.builtin.command:
+#     #     cmd: "cat {{ diff_output_file }}"
 
-  when: post_checks
-  delegate_to: localhost
-  ignore_errors: true
+#   when: post_checks
+#   delegate_to: localhost
+#   ignore_errors: true
 
-# ==> Run once tasks
-- name: List collected .txt files
-  ansible.builtin.shell: |
-    ls -l {{ inventory_hostname_dir_path }}
-  run_once: true
-  delegate_to: localhost
-  register: files_collection
+# # ==> Run once tasks
+# - name: List collected .txt files
+#   ansible.builtin.shell: |
+#     ls -l {{ inventory_hostname_dir_path }}
+#   run_once: true
+#   delegate_to: localhost
+#   register: files_collection
 
-- name: Debug output
-  ansible.builtin.debug:
-    var: files_collection.stdout_lines
-  run_once: true
-  delegate_to: localhost
+# - name: Debug output
+#   ansible.builtin.debug:
+#     var: files_collection.stdout_lines
+#   run_once: true
+#   delegate_to: localhost
 
-- name: Commit the changes and push to the remote repository
-  ansible.builtin.shell: |
-     cd {{ tmp_root_dir }}/{{ git_repo_name }}
-     git config --global user.name {{ git_user }}
-     git config --global user.email {{ git_user_email }}
-     git add .
-     git commit -m "file updates on $(date)"
-     git push
-  environment:
-    GIT_SSL_NO_VERIFY: "true"
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
+# - name: Commit the changes and push to the remote repository
+#   ansible.builtin.shell: |
+#      cd {{ tmp_root_dir }}/{{ git_repo_name }}
+#      git config --global user.name {{ git_user }}
+#      git config --global user.email {{ git_user_email }}
+#      git add .
+#      git commit -m "file updates on $(date)"
+#      git push
+#   environment:
+#     GIT_SSL_NO_VERIFY: "true"
+#   run_once: true
+#   ignore_errors: true
+#   delegate_to: localhost
 
 
 
-# Might not need this since containers are ephemeral.
-# But if testing or end up running the playbook more than once in the same container, this comes in handy
-- name: Clean up files
-  ansible.builtin.shell: |
-    cd {{ tmp_root_dir }}
-    rm -rf {{ git_repo_name }}
-  run_once: true
-  ignore_errors: true
-  delegate_to: localhost
+# # Might not need this since containers are ephemeral.
+# # But if testing or end up running the playbook more than once in the same container, this comes in handy
+# - name: Clean up files
+#   ansible.builtin.shell: |
+#     cd {{ tmp_root_dir }}
+#     rm -rf {{ git_repo_name }}
+#   run_once: true
+#   ignore_errors: true
+#   delegate_to: localhost
 
 
 

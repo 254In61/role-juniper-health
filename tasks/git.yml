@@ -1,0 +1,67 @@
+---
+# Git tasks
+- name: Clean up files  # Ensure no git conflicts
+  ansible.builtin.shell: |
+    cd {{ tmp_root_dir }}
+    rm -rf {{ git_repo_name }}
+  run_once: true
+  ignore_errors: true
+  delegate_to: localhost
+
+- name: Clone the config backup git repository
+  ansible.builtin.git:
+    repo: "{{ git_repo_url }}"
+    dest: "{{ tmp_root_dir }}/{{ git_repo_name }}"
+    version: "{{ git_repo_branch }}"
+    force: yes       # Still clone down and overwrite incase local repo is existing.
+  # ignore_errors: true # You want your play to fail if there's no repo cloned down
+  environment:
+    GIT_SSL_NO_VERIFY: "true"
+  run_once: true
+  delegate_to: localhost
+
+# Enable git lfs by default
+- name: Enable git lfs by default
+  ansible.builtin.shell: |
+    cd {{ tmp_root_dir }}/{{ git_repo_name }}
+    git lfs track "*.bin"
+    git lfs track "*.ucs"
+    git lfs track "*.tgz" 
+    git lfs pull 
+  run_once: true
+  ignore_errors: true
+  delegate_to: localhost
+
+- name: Set inventory_hostname directory name
+  ansible.builtin.set_fact:
+    inventory_hostname_dir_path: "{{ tmp_root_dir }}/{{ git_repo_name }}/{{ vendor_dir }}/{{ inventory_hostname }}/health-checks"
+  delegate_to: localhost
+
+- name: Ensure inventory_hostname dir is present - create if absent
+  ansible.builtin.file:
+    path: "{{ inventory_hostname_dir_path }}"
+    state: directory
+  ignore_errors: true
+  delegate_to: localhost
+
+- name: "Copy {{ file_name }} to local git repo"
+  ansible.builtin.copy:
+    content: "{{ file_name }}"
+    dest: "{{ inventory_hostname_dir_path }}/{{ file_name }}"
+  delegate_to: localhost
+
+- name: Commit the changes and push to the remote repository
+  ansible.builtin.shell: |
+     cd {{ tmp_root_dir }}/{{ git_repo_name }}
+     git config --global user.name {{ git_user }}
+     git config --global user.email {{ git_user_email }}
+     git add .
+     git commit -m "file updates on $(date)"
+     git push
+  environment:
+    GIT_SSL_NO_VERIFY: "true"
+  run_once: true
+  ignore_errors: true
+  delegate_to: localhost
+
+
