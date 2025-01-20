@@ -1,17 +1,4 @@
 ---
-#Identify if pre-health-checks or post-health-checks and name the file accordingly
-# - name: Set file name if pre-health-checks
-#   ansible.builtin.set_fact:
-#     file_name: "{{ pre_checks_output_file }}"
-#   when: pre_checks
-#   delegate_to: localhost
-
-# - name: Set file name if pre-health-checks
-#   ansible.builtin.set_fact:
-#     file_name: "{{ post_checks_output_file }}"
-#   when: post_checks
-#   delegate_to: localhost
-
 # Junos ansible facts
 - name: Gather Junos-specific facts - PRE-UPGRADE
   junipernetworks.junos.junos_facts:
@@ -34,18 +21,18 @@
 
 - name: Write junos ansible facts
   ansible.builtin.shell: |
-    echo "" >> {{ _health_checks_output_ }}
-    echo "##### JUNOS ANSIBLE FACTS ####" >> {{ _health_checks_output_ }}
-    echo "software version = {{ junos_facts.ansible_facts.ansible_net_version }}" >> {{ _health_checks_output_ }}
-    echo "device model     = {{ junos_facts.ansible_facts.ansible_net_model  }}" >> {{ _health_checks_output_ }}
-    echo "RE0 Status       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['status']  }}" >> {{ _health_checks_output_ }}
-    echo "RE0 Master state = {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['mastership_state'] }}" >> {{ _health_checks_output_ }}
-    echo "RE0 temperature  : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['temperature']  }}" >> {{ _health_checks_output_ }}
-    echo "RE0 uptime       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['up_time']  }}" >> {{ _health_checks_output_ }}
-    echo "RE1 Status       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['status']  }}" >> {{ _health_checks_output_ }}
-    echo "RE1 Master state : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['mastership_state']  }}" >> {{ _health_checks_output_ }}
-    echo "RE1 temperature  : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['temperature']  }}" >> {{ _health_checks_output_ }}
-    echo "RE1 uptime       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['up_time'] }}" >> {{ _health_checks_output_ }}
+    echo "" >> {{ _output_file_ }}
+    echo "##### JUNOS ANSIBLE FACTS ####" >> {{ _output_file_ }}
+    echo "software version = {{ junos_facts.ansible_facts.ansible_net_version }}" >> {{ _output_file_ }}
+    echo "device model     = {{ junos_facts.ansible_facts.ansible_net_model  }}" >> {{ _output_file_ }}
+    echo "RE0 Status       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['status']  }}" >> {{ _output_file_ }}
+    echo "RE0 Master state = {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['mastership_state'] }}" >> {{ _output_file_ }}
+    echo "RE0 temperature  : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['temperature']  }}" >> {{ _output_file_ }}
+    echo "RE0 uptime       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['0']['up_time']  }}" >> {{ _output_file_ }}
+    echo "RE1 Status       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['status']  }}" >> {{ _output_file_ }}
+    echo "RE1 Master state : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['mastership_state']  }}" >> {{ _output_file_ }}
+    echo "RE1 temperature  : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['temperature']  }}" >> {{ _output_file_ }}
+    echo "RE1 uptime       : {{ junos_facts.ansible_facts.ansible_net_routing_engines['1']['up_time'] }}" >> {{ _output_file_ }}
   delegate_to: localhost
   ignore_errors: true
 
@@ -76,18 +63,18 @@
   # when: stdout != "" # Only save output if command was successful
 
 # Combine the output to a single file
-- name: "Write health check outputs to {{ _health_checks_output_ }}"
+- name: "Write health check outputs to {{ _output_file_ }}"
   ansible.builtin.shell: |
-    echo "" >> {{ _health_checks_output_ }}
-    echo "##### {{ item.item | replace('_', ' ') }} ####" >> {{ _health_checks_output_ }}
-    cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ _health_checks_output_ }}
-    echo "" >> {{ _health_checks_output_ }}
+    echo "" >> {{ _output_file_ }}
+    echo "##### {{ item.item | replace('_', ' ') }} ####" >> {{ _output_file_ }}
+    cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ _output_file_ }}
+    echo "" >> {{ _output_file_ }}
   loop: "{{ command_output.results }}"
   delegate_to: localhost
 
-# - name: "Read contents of {{ _health_checks_output_ }}"
+# - name: "Read contents of {{ _output_file_ }}"
 #   ansible.builtin.set_fact:
-#     file_contents: "{{ lookup('file', '{{ _health_checks_output_ }}') }}"
+#     file_contents: "{{ lookup('file', '{{ _output_file_ }}') }}"
 #   delegate_to: localhost
 
 # - name: Print file contents

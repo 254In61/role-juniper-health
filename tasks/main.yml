@@ -1,4 +1,4 @@
 ---
 - name: Import health checks tasks
   ansible.builtin.import_tasks: health.yml
-  when: health | bool
+  when: _health_ | bool
