@@ -56,7 +56,7 @@
 - name: Save command output to dynamically named files
   ansible.builtin.copy:
     content: "{{ item.stdout[0] }}"
-    dest: "{{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt"
+    dest: "{{ _tmp_root_dir_ }}/{{ item.item | replace(' ', '_') }}.txt"
   loop: "{{ command_output.results }}"
   ignore_errors: true
   delegate_to: localhost
@@ -67,7 +67,7 @@
   ansible.builtin.shell: |
     echo "" >> {{ _output_file_ }}
     echo "##### {{ item.item | replace('_', ' ') }} ####" >> {{ _output_file_ }}
-    cat  {{ tmp_root_dir }}/{{ item.item | replace(' ', '_') }}.txt >> {{ _output_file_ }}
+    cat  {{ _tmp_root_dir_ }}/{{ item.item | replace(' ', '_') }}.txt >> {{ _output_file_ }}
     echo "" >> {{ _output_file_ }}
   loop: "{{ command_output.results }}"
   delegate_to: localhost
