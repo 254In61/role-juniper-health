@@ -32,7 +32,7 @@
 #       - "free memory(mb)  : {{ junos_facts.ansible_facts.ansible_net_memfree_mb }}"
 
 
-- name: "Write junos ansible facts to {{ _health_checks_output_ }}"
+- name: Write junos ansible facts
   ansible.builtin.shell: |
     echo "" >> {{ _health_checks_output_ }}
     echo "##### JUNOS ANSIBLE FACTS ####" >> {{ _health_checks_output_ }}
