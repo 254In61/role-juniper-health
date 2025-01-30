@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: role-junos-health-checks
+  role_name: role-junos-health-check
   author: Allan Maseghe - Redhat
   description: contains tasks to collect health checks from juniper devices
   license: MIT

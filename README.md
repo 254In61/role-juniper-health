@@ -13,8 +13,9 @@ Step 3: Call the role from your playbook. See example-playboo.vars
 
 # Example
 
-## varible definition in group_vars/*.yml
-example-vars.yml
-  
-##
+## example playbook
 example-playbook.yml
+
+## Notes
+- Role extracts the running configuration and dumps them on a file in the local disk.
+- Tasks have to be included to send this file somewhere e.g git repo or to an artifacts store.

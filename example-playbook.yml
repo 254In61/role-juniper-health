@@ -1,28 +1,25 @@
 ---
-- name: Perform pre-upgrade-checks
-  hosts: to_patch 
-  gather_facts: false
-  connection: ansible.netcommon.netconf
-  
+# health checks tasks 
+- name: Set output file name - pre-upgrade
+  ansible.builtin.set_fact:
+    output_file: "{{ tmp_base_dir }}/{{ git_repo_subdir_path }}/{{ pre_upgrade_health_checks_file }}" 
+  when: pre_upgrade
+
+- name: Set output file name - post-upgrade
+  ansible.builtin.set_fact:
+    output_file: "{{ tmp_base_dir }}/{{ git_repo_subdir_path }}/{{ post_upgrade_health_checks_file }}"
+  when: post_upgrade
+
+- name: Generate list of commands to run for healthchecks
+  ansible.builtin.set_fact:
+    command_list: "{{ lookup('file', '{{ health_check_commands_file }}').splitlines() }}"
+  delegate_to: localhost
+
+- name: Perform health checks on device
+  ansible.builtin.include_role:
+    name: role-juniper-health
   vars:
-    ansible_network_os: junos
-
-  pre_tasks:
-    - name: Include specific project variables
-      ansible.builtin.include_vars:
-        dir: group_vars
-      delegate_to: localhost
-
-  tasks:
-    - name: Set file operations facts
-      ansible.builtin.set_fact:
-        output_file: "{{ root_dir }}/{{ pre_checks_file }}"
-      delegate_to: localhost
-
-    - name: Import role-junos-health-checks role
-      ansible.builtin.include_role:
-        name: role-junos-health-checks
-      vars:
-        health: true
-        command: "{{ item }}"
-        loop: "{{ lookup('file', 'files/health-check-commands.txt').splitlines() }}"
+    _health_: true
+    _tmp_root_dir_: "{{ tmp_base_dir }}"
+    _commands_list_: "{{ command_list }}" # Should be a list of commands
+    _output_file_: "{{ output_file }}"
