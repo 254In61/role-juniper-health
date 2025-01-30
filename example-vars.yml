@@ -1,4 +1,0 @@
----
-pre_checks_file: "{{ inventory_hostname}}-pre-upgrade-checks.txt"
-post_checks_file: "{{ inventory_hostname}}-post-upgrade-checks.txt"
-  
